@@ -115,6 +115,12 @@ enabled for new and legacy scenes unless a project explicitly uninstalls it.
 See [Create a plugin](https://editor.pascal.app/docs/developers/plugins) for the
 full contract.
 
+## Credits
+
+Tree geometry is powered by [ez-tree](https://github.com/dgreenheck/ez-tree),
+created by [David Greenheck](https://github.com/dgreenheck). Thank you for making
+the project available to the community under the MIT license.
+
 ## License
 
 MIT. `@dgreenheck/ez-tree`, used for tree geometry, is also MIT licensed.
