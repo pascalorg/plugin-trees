@@ -20,7 +20,11 @@ const MODE_BY_KIND: Record<string, TreesPanelMode> = {
   'trees:grass': 'grass',
 }
 
-emitter.on('selection:find-node', (node: AnyNode) => {
+const findNodeEmitter = emitter as unknown as {
+  on: (type: 'selection:find-node', handler: (node: AnyNode) => void) => void
+}
+
+findNodeEmitter.on('selection:find-node', (node) => {
   const mode = MODE_BY_KIND[node.type as string]
   if (!mode) return
   const store = useTreesStore.getState()

@@ -304,7 +304,9 @@ export function KindProxy<N extends Placeable & { id: string }>({
   const handlers = useNodeEvents(node as never, node.type as never)
   useRegistry(node.id as AnyNodeId, node.type, registeredRef)
 
-  const isExporting = useViewer((s) => s.isExporting)
+  const isExporting = useViewer(
+    (s) => (s as typeof s & { isExporting?: boolean }).isExporting ?? false,
+  )
   const active = useViewer(
     (s) => s.hoveredId === node.id || s.selection.selectedIds.includes(node.id as never),
   )

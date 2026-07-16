@@ -3,13 +3,27 @@ import { buildFlowerFloorplan } from './floorplan'
 import { flowerParametrics } from './flower-parametrics'
 import { FlowerNode } from './flower-schema'
 
+type FlowerDefinition = NodeDefinition<typeof FlowerNode> & Record<string, unknown>
+
+const flowerFloorPlacement = {
+  footprint: (node: unknown) => {
+    const flower = node as FlowerNode
+    const radius = Math.max(0.1, flower.height * 0.25)
+    return {
+      dimensions: [radius * 2, flower.height, radius * 2] as [number, number, number],
+      rotation: flower.rotation,
+    }
+  },
+  collides: false,
+}
+
 /**
  * The flower node definition — a sibling instanced kind to the tree. Same
  * composition: a `def.system` batches every flower into InstancedMeshes, a
  * featherweight `def.renderer` proxy keeps selection working, `parametrics`
  * gives the inspector, `tool`/`preview` drive placement.
  */
-export const flowerDefinition: NodeDefinition<typeof FlowerNode> = {
+export const flowerDefinition: FlowerDefinition = {
   kind: 'trees:flower',
   bake: 'replace', // static in bake, live-rebuilt in our viewer — see plans → Part D
   schemaVersion: 1,
@@ -41,17 +55,7 @@ export const flowerDefinition: NodeDefinition<typeof FlowerNode> = {
     deletable: true,
     groupable: true,
     snappable: {},
-    floorPlaced: {
-      footprint: (node) => {
-        const flower = node as unknown as FlowerNode
-        const radius = Math.max(0.1, flower.height * 0.25)
-        return {
-          dimensions: [radius * 2, flower.height, radius * 2] as [number, number, number],
-          rotation: flower.rotation,
-        }
-      },
-      collides: false,
-    },
+    floorPlaced: flowerFloorPlacement,
   },
 
   parametrics: flowerParametrics,

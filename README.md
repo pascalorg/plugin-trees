@@ -1,14 +1,26 @@
-# @pascal-app/plugin-trees
+# Pascal Nature plugin
 
-The first-party **example plugin** for the Pascal editor. It contributes
+The standalone, first-party **example plugin** for the Pascal editor. It contributes
 procedural plant nodes plus a separately exported host-side Nature panel, and
 exists to prove — and document — the minimal node-plugin surface every future
 plugin reuses.
 
+Clone this repository as the starting point for your own Pascal plugin:
+
+```bash
+git clone https://github.com/pascalorg/plugin-trees.git
+cd plugin-trees
+bun install
+bun run check-types
+```
+
 It is structurally identical to a third-party plugin: it peer-depends on
 `@pascal-app/{core,viewer,editor}` (plus `react`/`three`/`@react-three/fiber`/
 `zustand`) and bundles `@dgreenheck/ez-tree` for the geometry. It imports
-nothing private. Copy this folder as the starting point for a new plugin.
+nothing private.
+
+Read [Create a plugin](https://editor.pascal.app/docs/developers/plugins) for
+the public API walkthrough and host integration contract.
 
 ## What it demonstrates
 
@@ -73,15 +85,17 @@ setPluginDiscovery(async () => [treesPlugin])
 
 `treesPlugin` exports three node kinds (`trees:tree`, `trees:flower`,
 `trees:grass`) for the core `loadPlugin` path. The editor app separately imports
-`treesHostPanel` to surface the Nature rail entry; panels are not part of the v1
-core plugin manifest.
+`treesHostPanel` to describe and surface the Nature rail entry; panels are not
+part of the v1 core plugin manifest. The panel declares `pluginId` and
+`defaultInstalled: true`, so Nature is listed in the Plugins sidebar and is
+enabled for new and legacy scenes unless a project explicitly uninstalls it.
 
 ## Notes / known gaps
 
-- `package.json` points `main`/`exports` at raw TypeScript (`./src/index.ts`),
-  which works here only because the host app's bundler transpiles workspace
-  packages. A real third-party plugin must ship built JS (with `.d.ts` types) or
-  otherwise ensure the consuming host transpiles the package.
+- `package.json` points `main`/`exports` at raw TypeScript (`./src/index.ts`).
+  Pascal's example hosts transpile this source package directly. If you publish
+  your plugin to npm for other hosts, ship built JS with `.d.ts` declarations or
+  document the equivalent host transpilation requirement.
 - `createNode` and the `floorPlaced.footprint` callback are typed against the
   host's hand-maintained `AnyNode` union, so the node is cast (`as AnyNode` /
   `as TreeNode`). The registry derives `AnyNode` post-migration.
@@ -96,4 +110,9 @@ core plugin manifest.
   instancing batching — but it degrades gracefully: such a node just becomes its
   own single-instance variant, never worse than the non-instanced path.
 
-See `wiki/architecture/plugin-authoring.md` for the full contract.
+See [Create a plugin](https://editor.pascal.app/docs/developers/plugins) for the
+full contract.
+
+## License
+
+MIT. `@dgreenheck/ez-tree`, used for tree geometry, is also MIT licensed.

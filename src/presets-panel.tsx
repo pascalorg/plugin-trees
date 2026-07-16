@@ -17,6 +17,11 @@ const KIND: Record<Mode, string> = {
 }
 const NOUN: Record<Mode, string> = { trees: 'tree', flowers: 'flower', grass: 'grass' }
 
+const setPluginTool = (tool: string) => {
+  const setTool = useEditor.getState().setTool as (value: string) => void
+  setTool(tool)
+}
+
 /**
  * The plugin's left-rail panel. A Trees / Flowers / Grass segmented control
  * switches the brush; picking a preset arms placement for that kind
@@ -101,7 +106,7 @@ function TreesSection({ arming }: { arming: boolean }) {
 
   const activate = (preset: TreePreset) => {
     useTreesStore.getState().setPreset(preset)
-    useEditor.getState().setTool('trees:tree')
+    setPluginTool('trees:tree')
     useEditor.getState().setMode('build')
   }
 
@@ -171,7 +176,7 @@ function FlowersSection({ arming }: { arming: boolean }) {
 
   const activate = (preset: FlowerPreset) => {
     useTreesStore.getState().setFlowerPreset(preset)
-    useEditor.getState().setTool('trees:flower')
+    setPluginTool('trees:flower')
     useEditor.getState().setMode('build')
   }
 
@@ -203,7 +208,7 @@ function GrassSection({ arming }: { arming: boolean }) {
 
   const activate = (preset: GrassPreset) => {
     useTreesStore.getState().setGrassPreset(preset)
-    useEditor.getState().setTool('trees:grass')
+    setPluginTool('trees:grass')
     useEditor.getState().setMode('build')
   }
 

@@ -3,6 +3,8 @@ import { buildTreeFloorplan, treeTrunkRadius } from './floorplan'
 import { treeParametrics } from './parametrics'
 import { TreeNode } from './schema'
 
+type TreeDefinition = NodeDefinition<typeof TreeNode> & Record<string, unknown>
+
 const ROTATE_RING_OFFSET = 0.35
 /** Ring hugs the ground like the item gizmo — high enough to clear the grass,
  * low enough to read as a floor affordance. */
@@ -38,6 +40,18 @@ function treeRotateHandle(): HandleDescriptor<TreeNode> {
   }
 }
 
+const treeFloorPlacement = {
+  footprint: (node: unknown) => {
+    const tree = node as TreeNode
+    const radius = treeTrunkRadius(tree)
+    return {
+      dimensions: [radius * 2, tree.height, radius * 2] as [number, number, number],
+      rotation: tree.rotation,
+    }
+  },
+  collides: false,
+}
+
 /**
  * The tree node definition. Rendering uses the instanced path rather than the
  * per-node `def.geometry`: a collective `def.system` batches every tree into
@@ -46,7 +60,7 @@ function treeRotateHandle(): HandleDescriptor<TreeNode> {
  * outline / zone machinery works unchanged. `parametrics` gives the inspector
  * for free; `tool`/`preview` drive placement. No host dispatch code per kind.
  */
-export const treeDefinition: NodeDefinition<typeof TreeNode> = {
+export const treeDefinition: TreeDefinition = {
   kind: 'trees:tree',
   // Static in the bake for portability; our viewer removes the baked meshes and
   // re-renders live (wind, LODs) via this def's own path. See plans → Part D.
@@ -93,21 +107,9 @@ export const treeDefinition: NodeDefinition<typeof TreeNode> = {
       const radius = treeTrunkRadius(tree)
       return { size: [radius * 2, tree.height ?? 7, radius * 2] }
     },
-    floorPlaced: {
-      // `footprint` receives the host's `AnyNode`; cast to our schema type the
-      // same way built-in kinds do (`node as ShelfNode`). Trunk-sized, not
-      // canopy-sized — the drag/placement box should hug where the tree
-      // actually plants, not span the whole crown.
-      footprint: (node) => {
-        const tree = node as unknown as TreeNode
-        const radius = treeTrunkRadius(tree)
-        return {
-          dimensions: [radius * 2, tree.height, radius * 2] as [number, number, number],
-          rotation: tree.rotation,
-        }
-      },
-      collides: false,
-    },
+    // Defined outside the contextually typed object so the optional `collides`
+    // hint remains compatible with Pascal hosts released before that field.
+    floorPlaced: treeFloorPlacement,
   },
 
   parametrics: treeParametrics,

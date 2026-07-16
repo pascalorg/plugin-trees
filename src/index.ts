@@ -1,5 +1,4 @@
 import type { AnyNodeDefinition, Plugin } from '@pascal-app/core'
-import type { EditorHostPanel } from '@pascal-app/editor'
 // Side-effect: subscribes the panel store to `selection:find-node` so the
 // host's "find in catalog" lands on the right Nature section (see find-sync.ts).
 import './find-sync'
@@ -7,6 +6,21 @@ import { NATURE_ICON } from './art'
 import { treeDefinition } from './definition'
 import { flowerDefinition } from './flower-definition'
 import { grassDefinition } from './grass-definition'
+
+type PluginHostPanel = {
+  id: string
+  label: string
+  icon: { kind: 'url'; src: string }
+  component: () => Promise<{ default: React.ComponentType }>
+  pluginId: string
+  description: string
+  creator: {
+    name: string
+    url?: string
+  }
+  pluginUrl: string
+  defaultInstalled: boolean
+}
 
 /**
  * The trees plugin manifest — the entire public surface of this package. A host
@@ -25,11 +39,19 @@ export const treesPlugin: Plugin = {
   ],
 }
 
-export const treesHostPanel: EditorHostPanel = {
+export const treesHostPanel: PluginHostPanel = {
   id: 'pascal:trees:trees',
   label: 'Nature',
   icon: { kind: 'url', src: NATURE_ICON },
   component: () => import('./presets-panel'),
+  pluginId: treesPlugin.id,
+  description: 'Procedural trees, flowers, and grasses for outdoor scenes.',
+  creator: {
+    name: 'Pascal',
+    url: 'https://github.com/pascalorg',
+  },
+  pluginUrl: 'https://github.com/pascalorg/plugin-trees',
+  defaultInstalled: true,
 }
 
 // NOTE: no re-export from './geometry' — it imports ez-tree, which touches

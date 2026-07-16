@@ -3,13 +3,27 @@ import { buildGrassFloorplan } from './floorplan'
 import { grassParametrics } from './grass-parametrics'
 import { GrassNode } from './grass-schema'
 
+type GrassDefinition = NodeDefinition<typeof GrassNode> & Record<string, unknown>
+
+const grassFloorPlacement = {
+  footprint: (node: unknown) => {
+    const grass = node as GrassNode
+    const radius = Math.max(0.1, grass.height * 0.3)
+    return {
+      dimensions: [radius * 2, grass.height, radius * 2] as [number, number, number],
+      rotation: grass.rotation,
+    }
+  },
+  collides: false,
+}
+
 /**
  * The grass node definition — a third instanced kind alongside trees & flowers.
  * Same composition: a `def.system` batches every tuft into InstancedMeshes, a
  * featherweight `def.renderer` proxy keeps selection working, `parametrics`
  * gives the inspector, `tool`/`preview` drive placement.
  */
-export const grassDefinition: NodeDefinition<typeof GrassNode> = {
+export const grassDefinition: GrassDefinition = {
   kind: 'trees:grass',
   bake: 'replace', // static in bake, live-rebuilt in our viewer — see plans → Part D
   schemaVersion: 1,
@@ -41,17 +55,7 @@ export const grassDefinition: NodeDefinition<typeof GrassNode> = {
     deletable: true,
     groupable: true,
     snappable: {},
-    floorPlaced: {
-      footprint: (node) => {
-        const grass = node as unknown as GrassNode
-        const radius = Math.max(0.1, grass.height * 0.3)
-        return {
-          dimensions: [radius * 2, grass.height, radius * 2] as [number, number, number],
-          rotation: grass.rotation,
-        }
-      },
-      collides: false,
-    },
+    floorPlaced: grassFloorPlacement,
   },
 
   parametrics: grassParametrics,
