@@ -1,5 +1,7 @@
 # Pascal Nature plugin
 
+![Procedural trees, flowers, grasses, and shrubs from the Pascal Nature plugin](./assets/nature-plugin.png)
+
 The standalone, first-party **example plugin** for the Pascal editor. It contributes
 procedural plant nodes plus a separately exported host-side Nature panel, and
 exists to prove — and document — the minimal node-plugin surface every future
