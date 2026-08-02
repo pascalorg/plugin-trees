@@ -12,6 +12,7 @@ import { useNodeEvents, useViewer } from '@pascal-app/viewer'
 import { useFrame } from '@react-three/fiber'
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import { type BufferGeometry, type InstancedMesh, type Material, Matrix4, Object3D } from 'three'
+import { plantElevation } from './elevation'
 import { toStaticMaterial } from './wind-node'
 
 /**
@@ -196,16 +197,16 @@ function InstancedSubMesh<N extends Placeable>({
   // write — the per-frame staleness check below compares against it so a level
   // move (explode, elevation edit) refreshes instances without a node change.
   const parentWorlds = useRef(new Map<string, number[]>())
-
   const writeMatrices = useCallback(() => {
     const mesh = ref.current
     if (!mesh) return
     parentWorlds.current.clear()
+    const sceneNodes = useScene.getState().nodes
     for (let i = 0; i < nodes.length; i += 1) {
       const node = nodes[i]
       if (!node) continue
       const scale = node.height / naturalHeight
-      DUMMY.position.set(node.position[0], node.position[1], node.position[2])
+      DUMMY.position.set(node.position[0], plantElevation(node, sceneNodes), node.position[2])
       DUMMY.rotation.set(node.rotation[0], node.rotation[1], node.rotation[2])
       DUMMY.scale.set(scale, scale, scale)
       DUMMY.updateMatrix()
@@ -234,22 +235,44 @@ function InstancedSubMesh<N extends Placeable>({
     writeMatrices()
   }, [writeMatrices])
 
-  // A parent level can move without any node of this kind changing (level
-  // explode, elevation edits), which would leave the baked-in world transform
-  // stale. Compare each referenced level's matrixWorld against the snapshot —
-  // a handful of levels × 16 floats per frame — and rewrite only on change.
+  // Two things can invalidate the written matrices with no change to any node of
+  // this kind, so both are checked per frame:
+  //
+  // - the parent level's world transform (explode, level-height edits), which is
+  //   baked into every instance matrix, and
+  // - the floor a plant stands on: a deck slab raised, or the ground sculpted —
+  //   and a terrain stroke publishes to a transient store, never touching the
+  //   scene graph, so there is no node change to observe.
+  //
+  // The floor case rides the host's dirty marks (it marks every `floorPlaced` node
+  // at grade on each dab) rather than re-resolving every instance: a forest would
+  // be thousands of spatial queries per frame for a signal that is idle almost
+  // always. Reading the marks *here* rather than in an effect is deliberate — this
+  // callback has no explicit priority, so it runs before the priority-2 pass in
+  // `InstancedKindSystem` that consumes them, whereas a React effect might not
+  // flush until after the marks were already cleared.
   useFrame(() => {
-    if (localSpace || !ref.current) return
-    for (const [id, cached] of parentWorlds.current) {
-      const parent = sceneRegistry.nodes.get(id)
-      if (!parent) continue
-      parent.updateWorldMatrix(true, false)
-      const elements = parent.matrixWorld.elements
-      for (let i = 0; i < 16; i += 1) {
-        if (elements[i] !== cached[i]) {
-          writeMatrices()
-          return
+    if (!ref.current) return
+    if (!localSpace) {
+      for (const [id, cached] of parentWorlds.current) {
+        const parent = sceneRegistry.nodes.get(id)
+        if (!parent) continue
+        parent.updateWorldMatrix(true, false)
+        const elements = parent.matrixWorld.elements
+        for (let i = 0; i < 16; i += 1) {
+          if (elements[i] !== cached[i]) {
+            writeMatrices()
+            return
+          }
         }
+      }
+    }
+    const { dirtyNodes } = useScene.getState()
+    if (dirtyNodes.size === 0) return
+    for (const node of nodes) {
+      if (node && dirtyNodes.has(node.id as AnyNodeId)) {
+        writeMatrices()
+        return
       }
     }
   })
@@ -336,10 +359,18 @@ export function KindProxy<N extends Placeable & { id: string }>({
   )
   const geometryScale = variant ? height / variant.naturalHeight : 1
 
+  // The registered group's Y is the host's: `FloorElevationSystem` overwrites it
+  // every frame with the resolved floor lift. The collider is a *sibling* of that
+  // group (so the outline pass traces the real silhouette, not a box), which puts
+  // it outside the host's reach — resolve the same lift for it here, or the hit
+  // volume stays at the storey plane while the plant it stands for rides a deck
+  // or a hillside.
+  const colliderY = plantElevation({ ...node, position }) + height / 2
+
   return (
     <group visible={node.visible !== false} {...handlers}>
       {!isExporting && (
-        <mesh position={[position[0], position[1] + height / 2, position[2]]}>
+        <mesh position={[position[0], colliderY, position[2]]}>
           <boxGeometry args={[radius * 2, height, radius * 2]} />
           <meshBasicMaterial colorWrite={false} depthWrite={false} />
         </mesh>
