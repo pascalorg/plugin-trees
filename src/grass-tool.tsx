@@ -1,7 +1,7 @@
 'use client'
 
 import { type AnyNode, type AnyNodeId, useScene } from '@pascal-app/core'
-import { triggerSFX } from '@pascal-app/editor'
+import { EDITOR_LAYER, triggerSFX } from '@pascal-app/editor'
 import { useViewer } from '@pascal-app/viewer'
 import { useMemo } from 'react'
 import { GRASS_PRESETS, GRASS_SEED_POOL } from './grass-presets'
@@ -31,26 +31,30 @@ export default function GrassTool() {
     [preset, height],
   )
 
-  const { cursorRef, cursorVisible } = usePlacement(activeLevelId, (position) => {
-    if (!activeLevelId) return
-    const s = useTreesStore.getState()
-    const grass = GrassNode.parse({
-      preset: s.grassPreset,
-      height: s.grassHeight,
-      bladeColor: GRASS_PRESETS[s.grassPreset].bladeColor,
-      seed: GRASS_SEED_POOL[Math.floor(Math.random() * GRASS_SEED_POOL.length)] ?? 1,
-      position,
-      rotation: [0, (Math.floor(Math.random() * 8) * Math.PI) / 4, 0],
-    })
-    useScene.getState().createNode(grass as unknown as AnyNode, activeLevelId as AnyNodeId)
-    useViewer.getState().setSelection({ selectedIds: [grass.id as AnyNodeId] })
-    triggerSFX('sfx:item-place')
-  })
+  const { cursorRef, cursorVisible } = usePlacement(
+    activeLevelId,
+    (position) => {
+      if (!activeLevelId) return
+      const s = useTreesStore.getState()
+      const grass = GrassNode.parse({
+        preset: s.grassPreset,
+        height: s.grassHeight,
+        bladeColor: GRASS_PRESETS[s.grassPreset].bladeColor,
+        seed: GRASS_SEED_POOL[Math.floor(Math.random() * GRASS_SEED_POOL.length)] ?? 1,
+        position,
+        rotation: [0, (Math.floor(Math.random() * 8) * Math.PI) / 4, 0],
+      })
+      useScene.getState().createNode(grass as unknown as AnyNode, activeLevelId as AnyNodeId)
+      useViewer.getState().setSelection({ selectedIds: [grass.id as AnyNodeId] })
+      triggerSFX('sfx:item-place')
+    },
+    previewNode,
+  )
 
   if (!activeLevelId) return null
 
   return (
-    <group ref={cursorRef} visible={cursorVisible}>
+    <group layers={EDITOR_LAYER} ref={cursorRef} visible={cursorVisible}>
       <GrassPreview node={previewNode} />
     </group>
   )

@@ -4,6 +4,7 @@ import { emitter, type GridEvent, sceneRegistry, snapPointToGrid } from '@pascal
 import { useEditor } from '@pascal-app/editor'
 import { useEffect, useRef, useState } from 'react'
 import { type Group, Vector3 } from 'three'
+import { draftElevation } from './elevation'
 
 const worldVec = new Vector3()
 
@@ -45,26 +46,48 @@ export function toLevelLocal(
  * position on `grid:click`. Returns the cursor group ref + visibility for the
  * tool to attach its preview to. `onCommit` is read through a ref so a tool can
  * close over live brush state without re-subscribing every render.
+ *
+ * `previewNode` is the draft the tool is about to place. It exists only so the
+ * ghost can be raised onto whatever it will actually land on — the floor
+ * resolver reads the kind's `floorPlaced` footprint off the node, so a plain
+ * position is not enough to ask the question. Tools that omit it get a ghost
+ * pinned to the storey plane.
  */
 export function usePlacement(
   activeLevelId: string | null,
   onCommit: (levelLocalPosition: [number, number, number]) => void,
+  previewNode?: unknown,
 ) {
   const cursorRef = useRef<Group>(null)
   const [cursorVisible, setCursorVisible] = useState(false)
   const commitRef = useRef(onCommit)
   commitRef.current = onCommit
+  const previewRef = useRef(previewNode)
+  previewRef.current = previewNode
 
   useEffect(() => {
     if (!activeLevelId) return
     setCursorVisible(false)
     let lastWorld: [number, number, number] | null = null
 
+    /**
+     * Where the ghost stands: the snapped point raised onto the surface the
+     * commit will elect — a stacked slab, or the sculpted ground. The commit
+     * itself stays flat (`[x, 0, z]`); the lift is presentation, applied to the
+     * stored base by the host's floor-elevation pass once the node exists. A
+     * ghost that skipped this floated at the storey plane over a deck and sank
+     * into every hillside, so the plant jumped on click.
+     */
+    const ghostY = (x: number, z: number): number => {
+      const node = previewRef.current
+      return node ? draftElevation(node, activeLevelId, [x, 0, z]) : 0
+    }
+
     const onMove = (event: GridEvent) => {
       setCursorVisible(true)
       const [lx, , lz] = event.localPosition
       const [sx, sz] = snapXZ(lx, lz)
-      cursorRef.current?.position.set(sx, 0, sz)
+      cursorRef.current?.position.set(sx, ghostY(sx, sz), sz)
       lastWorld = event.position
     }
 
