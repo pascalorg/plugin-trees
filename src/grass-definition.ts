@@ -1,9 +1,9 @@
-import type { NodeDefinition } from '@pascal-app/core'
+import type { CoreNodeDefinition } from '@pascal-app/core'
+import type { EditorNodeContribution } from '@pascal-app/editor'
+import type { ViewerNodeContribution } from '@pascal-app/viewer'
 import { buildGrassFloorplan } from './floorplan'
 import { grassParametrics } from './grass-parametrics'
 import { GrassNode } from './grass-schema'
-
-type GrassDefinition = NodeDefinition<typeof GrassNode> & Record<string, unknown>
 
 const grassFloorPlacement = {
   footprint: (node: unknown) => {
@@ -23,13 +23,12 @@ const grassFloorPlacement = {
  * featherweight `def.renderer` proxy keeps selection working, `parametrics`
  * gives the inspector, `tool`/`preview` drive placement.
  */
-export const grassDefinition: GrassDefinition = {
+
+export const grassCoreDefinition: CoreNodeDefinition<typeof GrassNode> = {
   kind: 'trees:grass',
-  bake: 'replace', // static in bake, live-rebuilt in our viewer — see plans → Part D
   schemaVersion: 1,
   schema: GrassNode,
   category: 'furnish',
-  snapProfile: 'item',
 
   defaults: () => ({
     object: 'node',
@@ -58,12 +57,25 @@ export const grassDefinition: GrassDefinition = {
     floorPlaced: grassFloorPlacement,
   },
 
-  parametrics: grassParametrics,
-  floorplan: buildGrassFloorplan,
+  mcp: {
+    description:
+      'A procedural grass tuft (example plugin node) — meadow, fescue, or reed, instanced like the trees.',
+  },
+}
+
+export const grassViewerContribution: ViewerNodeContribution<typeof GrassNode> = {
+  bake: 'replace', // static in bake, live-rebuilt in our viewer — see plans → Part D
 
   renderer: { kind: 'parametric', module: () => import('./grass-proxy-renderer') },
   system: { module: () => import('./grass-system'), priority: 3 },
   bakeReplaceRenderer: { module: () => import('./grass-static-renderer') },
+}
+
+export const grassEditorContribution: EditorNodeContribution<typeof GrassNode> = {
+  snapProfile: 'item',
+
+  parametrics: grassParametrics,
+  floorplan: buildGrassFloorplan,
 
   preview: () => import('./grass-preview'),
   tool: () => import('./grass-tool'),
@@ -78,10 +90,5 @@ export const grassDefinition: GrassDefinition = {
     icon: { kind: 'iconify', name: 'lucide:wheat' },
     paletteSection: 'furnish',
     hidden: true,
-  },
-
-  mcp: {
-    description:
-      'A procedural grass tuft (example plugin node) — meadow, fescue, or reed, instanced like the trees.',
   },
 }

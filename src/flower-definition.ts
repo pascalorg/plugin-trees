@@ -1,9 +1,9 @@
-import type { NodeDefinition } from '@pascal-app/core'
+import type { CoreNodeDefinition } from '@pascal-app/core'
+import type { EditorNodeContribution } from '@pascal-app/editor'
+import type { ViewerNodeContribution } from '@pascal-app/viewer'
 import { buildFlowerFloorplan } from './floorplan'
 import { flowerParametrics } from './flower-parametrics'
 import { FlowerNode } from './flower-schema'
-
-type FlowerDefinition = NodeDefinition<typeof FlowerNode> & Record<string, unknown>
 
 const flowerFloorPlacement = {
   footprint: (node: unknown) => {
@@ -23,13 +23,12 @@ const flowerFloorPlacement = {
  * featherweight `def.renderer` proxy keeps selection working, `parametrics`
  * gives the inspector, `tool`/`preview` drive placement.
  */
-export const flowerDefinition: FlowerDefinition = {
+
+export const flowerCoreDefinition: CoreNodeDefinition<typeof FlowerNode> = {
   kind: 'trees:flower',
-  bake: 'replace', // static in bake, live-rebuilt in our viewer — see plans → Part D
   schemaVersion: 1,
   schema: FlowerNode,
   category: 'furnish',
-  snapProfile: 'item',
 
   defaults: () => ({
     object: 'node',
@@ -58,12 +57,25 @@ export const flowerDefinition: FlowerDefinition = {
     floorPlaced: flowerFloorPlacement,
   },
 
-  parametrics: flowerParametrics,
-  floorplan: buildFlowerFloorplan,
+  mcp: {
+    description:
+      'A procedural flower (example plugin node) — daisy, tulip, or lavender, instanced like the trees.',
+  },
+}
+
+export const flowerViewerContribution: ViewerNodeContribution<typeof FlowerNode> = {
+  bake: 'replace', // static in bake, live-rebuilt in our viewer — see plans → Part D
 
   renderer: { kind: 'parametric', module: () => import('./flower-proxy-renderer') },
   system: { module: () => import('./flower-system'), priority: 3 },
   bakeReplaceRenderer: { module: () => import('./flower-static-renderer') },
+}
+
+export const flowerEditorContribution: EditorNodeContribution<typeof FlowerNode> = {
+  snapProfile: 'item',
+
+  parametrics: flowerParametrics,
+  floorplan: buildFlowerFloorplan,
 
   preview: () => import('./flower-preview'),
   tool: () => import('./flower-tool'),
@@ -78,10 +90,5 @@ export const flowerDefinition: FlowerDefinition = {
     icon: { kind: 'iconify', name: 'lucide:flower-2' },
     paletteSection: 'furnish',
     hidden: true,
-  },
-
-  mcp: {
-    description:
-      'A procedural flower (example plugin node) — daisy, tulip, or lavender, instanced like the trees.',
   },
 }

@@ -80,15 +80,33 @@ instancing pay off; a unique inspector seed just renders as its own variant.
 ## Manifest
 
 ```ts
-import { treesPlugin } from '@pascal-app/plugin-trees'
+import {
+  treesCoreManifest,
+  treesEditorManifest,
+  treesViewerManifest,
+} from '@pascal-app/plugin-trees'
+import { loadCoreManifest } from '@pascal-app/core'
+import { loadViewerManifest } from '@pascal-app/viewer'
+import { loadEditorManifest } from '@pascal-app/editor'
+
 // host:
-setPluginDiscovery(async () => [treesPlugin])
+loadCoreManifest(treesCoreManifest)
+loadViewerManifest(treesViewerManifest)
+loadEditorManifest(treesEditorManifest)
 ```
 
-`treesPlugin` exports three node kinds (`trees:tree`, `trees:flower`,
-`trees:grass`) for the core `loadPlugin` path. The editor app separately imports
-`treesHostPanel` to describe and surface the Nature rail entry; panels are not
-part of the v1 core plugin manifest. The panel declares `pluginId` and
+Plugin API v2 ships three manifests instead of one `NodeDefinition` list. The
+core manifest declares the three kinds (`trees:tree`, `trees:flower`,
+`trees:grass`) — a kind exists because it is there. The viewer and editor
+manifests attach geometry/renderers and parametrics/tools/plan symbols to those
+kinds by `kind`, and a host rejects a contribution whose kind has no base
+definition. Each manifest names only what its own package owns, which is what
+lets `@pascal-app/core` stop publishing React and Three.js types to plugin
+authors.
+
+The editor app separately imports `treesHostPanel` to describe and surface the
+Nature rail entry; panels are not part of the core plugin manifest. The panel
+declares `pluginId` and
 `defaultInstalled: true`, so Nature is listed in the Plugins sidebar and is
 enabled for new and legacy scenes unless a project explicitly uninstalls it.
 

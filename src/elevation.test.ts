@@ -4,12 +4,12 @@ import {
   BuildingNode,
   initSpatialGridSync,
   LevelNode,
-  loadPlugin,
+  loadCoreManifest,
   SlabNode,
   useScene,
 } from '@pascal-app/core'
 import { draftElevation, plantElevation } from './elevation'
-import { treesPlugin } from './index'
+import { treesCoreManifest } from './index'
 
 /**
  * The elevation contract an instanced kind has to satisfy by hand.
@@ -90,7 +90,7 @@ function plant(kind: string, x: number, z: number) {
 
 beforeAll(async () => {
   // The resolver reads each kind's `floorPlaced` footprint off the registry.
-  await loadPlugin(treesPlugin as never)
+  loadCoreManifest(treesCoreManifest)
   initSpatialGridSync()
 })
 

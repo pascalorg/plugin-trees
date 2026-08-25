@@ -1,6 +1,8 @@
 'use client'
 
-import { emitter, type GridEvent, sceneRegistry, snapPointToGrid } from '@pascal-app/core'
+import { emitter, snapPointToGrid } from '@pascal-app/core'
+import type { GridEvent } from '@pascal-app/editor'
+import { sceneRegistry } from '@pascal-app/viewer'
 import { useEditor } from '@pascal-app/editor'
 import { useEffect, useRef, useState } from 'react'
 import { type Group, Vector3 } from 'three'

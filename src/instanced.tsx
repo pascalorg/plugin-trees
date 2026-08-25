@@ -2,13 +2,11 @@
 
 import {
   type AnyNodeId,
-  sceneRegistry,
   useLiveNodeOverrides,
   useLiveTransforms,
-  useRegistry,
   useScene,
 } from '@pascal-app/core'
-import { useNodeEvents, useViewer } from '@pascal-app/viewer'
+import { sceneRegistry, useNodeEvents, useRegistry, useViewer } from '@pascal-app/viewer'
 import { useFrame } from '@react-three/fiber'
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import { type BufferGeometry, type InstancedMesh, type Material, Matrix4, Object3D } from 'three'

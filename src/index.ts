@@ -1,11 +1,22 @@
-import type { AnyNodeDefinition, Plugin } from '@pascal-app/core'
+import type { CorePluginManifest } from '@pascal-app/core'
+import { PLUGIN_API_VERSION } from '@pascal-app/core'
+import type { EditorPluginManifest } from '@pascal-app/editor'
+import type { ViewerPluginManifest } from '@pascal-app/viewer'
 // Side-effect: subscribes the panel store to `selection:find-node` so the
 // host's "find in catalog" lands on the right Nature section (see find-sync.ts).
 import './find-sync'
 import { NATURE_ICON } from './art'
-import { treeDefinition } from './definition'
-import { flowerDefinition } from './flower-definition'
-import { grassDefinition } from './grass-definition'
+import { treeCoreDefinition, treeEditorContribution, treeViewerContribution } from './definition'
+import {
+  flowerCoreDefinition,
+  flowerEditorContribution,
+  flowerViewerContribution,
+} from './flower-definition'
+import {
+  grassCoreDefinition,
+  grassEditorContribution,
+  grassViewerContribution,
+} from './grass-definition'
 
 type PluginHostPanel = {
   id: string
@@ -22,20 +33,43 @@ type PluginHostPanel = {
   defaultInstalled: boolean
 }
 
+const PLUGIN_ID = 'pascal:trees'
+
 /**
- * The trees plugin manifest — the entire public surface of this package. A host
- * loads it through the same `loadPlugin` path the built-ins use: three node kinds
- * (`trees:tree`, `trees:flower`, `trees:grass`) and one left-rail panel
- * (`Trees`). Cast mirrors the built-in bundle: `AnyNodeDefinition` is the
- * hand-maintained union today; the registry derives it post-migration.
+ * The trees plugin manifests — the entire public surface of this package.
+ *
+ * v2 splits what v1 shipped as one `NodeDefinition` list into three manifests,
+ * each naming only what its own package owns. A kind exists because
+ * `treesCoreManifest` declares it; the viewer and editor manifests attach to
+ * those kinds by `kind` and are rejected if no base definition was registered.
+ *
+ * Nothing here names `NodeDefinition` — that type is gone from the v2 contract,
+ * which is what lets `@pascal-app/core` stop publishing React and Three.js
+ * types to plugin authors.
  */
-export const treesPlugin: Plugin = {
-  id: 'pascal:trees',
-  apiVersion: 1,
-  nodes: [
-    treeDefinition as unknown as AnyNodeDefinition,
-    flowerDefinition as unknown as AnyNodeDefinition,
-    grassDefinition as unknown as AnyNodeDefinition,
+export const treesCoreManifest: CorePluginManifest = {
+  id: PLUGIN_ID,
+  apiVersion: PLUGIN_API_VERSION,
+  nodes: [treeCoreDefinition, flowerCoreDefinition, grassCoreDefinition],
+}
+
+/** Geometry, renderers, and the instanced systems that batch every plant. */
+export const treesViewerManifest: ViewerPluginManifest = {
+  id: PLUGIN_ID,
+  contributions: [
+    { kind: treeCoreDefinition.kind, ...treeViewerContribution },
+    { kind: flowerCoreDefinition.kind, ...flowerViewerContribution },
+    { kind: grassCoreDefinition.kind, ...grassViewerContribution },
+  ],
+}
+
+/** Inspector parametrics, plan symbols, placement tools, and palette entries. */
+export const treesEditorManifest: EditorPluginManifest = {
+  id: PLUGIN_ID,
+  contributions: [
+    { kind: treeCoreDefinition.kind, ...treeEditorContribution },
+    { kind: flowerCoreDefinition.kind, ...flowerEditorContribution },
+    { kind: grassCoreDefinition.kind, ...grassEditorContribution },
   ],
 }
 
@@ -44,7 +78,7 @@ export const treesHostPanel: PluginHostPanel = {
   label: 'Nature',
   icon: { kind: 'url', src: NATURE_ICON },
   component: () => import('./presets-panel'),
-  pluginId: treesPlugin.id,
+  pluginId: PLUGIN_ID,
   description: 'Procedural trees, flowers, and grasses for outdoor scenes.',
   creator: {
     name: 'Pascal',
@@ -57,9 +91,21 @@ export const treesHostPanel: PluginHostPanel = {
 // NOTE: no re-export from './geometry' — it imports ez-tree, which touches
 // `document` at module scope and would crash SSR (this barrel is eagerly
 // imported by host bootstraps). Lazy client modules import it directly.
-export { treeDefinition } from './definition'
-export { flowerDefinition } from './flower-definition'
+export {
+  treeCoreDefinition,
+  treeEditorContribution,
+  treeViewerContribution,
+} from './definition'
+export {
+  flowerCoreDefinition,
+  flowerEditorContribution,
+  flowerViewerContribution,
+} from './flower-definition'
 export { FlowerNode, FlowerPreset } from './flower-schema'
-export { grassDefinition } from './grass-definition'
+export {
+  grassCoreDefinition,
+  grassEditorContribution,
+  grassViewerContribution,
+} from './grass-definition'
 export { GrassNode, GrassPreset } from './grass-schema'
 export { TreeNode, TreePreset } from './schema'

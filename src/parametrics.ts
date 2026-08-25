@@ -1,4 +1,5 @@
-import { type AnyNodeId, type ParametricDescriptor, useScene } from '@pascal-app/core'
+import { type AnyNodeId, useScene } from '@pascal-app/core'
+import type { ParametricDescriptor } from '@pascal-app/editor'
 import { defaultHeightOf, TREE_SEED_POOL } from './presets'
 import type { TreeNode } from './schema'
 

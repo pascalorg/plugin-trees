@@ -1,9 +1,9 @@
-import type { HandleDescriptor, NodeDefinition } from '@pascal-app/core'
+import type { CoreNodeDefinition } from '@pascal-app/core'
+import type { EditorNodeContribution, HandleDescriptor } from '@pascal-app/editor'
+import type { ViewerNodeContribution } from '@pascal-app/viewer'
 import { buildTreeFloorplan, treeTrunkRadius } from './floorplan'
 import { treeParametrics } from './parametrics'
 import { TreeNode } from './schema'
-
-type TreeDefinition = NodeDefinition<typeof TreeNode> & Record<string, unknown>
 
 const ROTATE_RING_OFFSET = 0.35
 /** Ring hugs the ground like the item gizmo — high enough to clear the grass,
@@ -60,15 +60,12 @@ const treeFloorPlacement = {
  * outline / zone machinery works unchanged. `parametrics` gives the inspector
  * for free; `tool`/`preview` drive placement. No host dispatch code per kind.
  */
-export const treeDefinition: TreeDefinition = {
+
+export const treeCoreDefinition: CoreNodeDefinition<typeof TreeNode> = {
   kind: 'trees:tree',
-  // Static in the bake for portability; our viewer removes the baked meshes and
-  // re-renders live (wind, LODs) via this def's own path. See plans → Part D.
-  bake: 'replace',
   schemaVersion: 1,
   schema: TreeNode,
   category: 'furnish',
-  snapProfile: 'item',
 
   defaults: () => ({
     object: 'node',
@@ -112,10 +109,16 @@ export const treeDefinition: TreeDefinition = {
     floorPlaced: treeFloorPlacement,
   },
 
-  parametrics: treeParametrics,
-  // 2D plan symbol: dashed canopy ring + trunk dot (see floorplan.ts).
-  floorplan: buildTreeFloorplan,
-  handles: [treeRotateHandle()],
+  mcp: {
+    description:
+      'A procedural ez-tree (example plugin node). Species presets (oak/pine/aspen/ash/bush/trellis) × size, deciduous/evergreen type, adjustable height, foliage/trunk, leaf & branch tint, and a seed for variation.',
+  },
+}
+
+export const treeViewerContribution: ViewerNodeContribution<typeof TreeNode> = {
+  // Static in the bake for portability; our viewer removes the baked meshes and
+  // re-renders live (wind, LODs) via this def's own path. See plans → Part D.
+  bake: 'replace',
 
   // Instanced rendering: an invisible per-node proxy for selection/outline...
   renderer: { kind: 'parametric', module: () => import('./proxy-renderer') },
@@ -123,6 +126,15 @@ export const treeDefinition: TreeDefinition = {
   system: { module: () => import('./system'), priority: 3 },
   // Baked `/viewer` re-render for `bake: 'replace'` — collective, instanced.
   bakeReplaceRenderer: { module: () => import('./static-renderer') },
+}
+
+export const treeEditorContribution: EditorNodeContribution<typeof TreeNode> = {
+  snapProfile: 'item',
+
+  parametrics: treeParametrics,
+  // 2D plan symbol: dashed canopy ring + trunk dot (see floorplan.ts).
+  floorplan: buildTreeFloorplan,
+  handles: [treeRotateHandle()],
 
   preview: () => import('./preview'),
   tool: () => import('./tool'),
@@ -137,10 +149,5 @@ export const treeDefinition: TreeDefinition = {
     icon: { kind: 'iconify', name: 'lucide:trees' },
     paletteSection: 'furnish',
     hidden: true,
-  },
-
-  mcp: {
-    description:
-      'A procedural ez-tree (example plugin node). Species presets (oak/pine/aspen/ash/bush/trellis) × size, deciduous/evergreen type, adjustable height, foliage/trunk, leaf & branch tint, and a seed for variation.',
   },
 }

@@ -1,6 +1,6 @@
 {
   "name": "@pascal-app/plugin-trees",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "First-party example Pascal editor plugin — a procedural trees node with a presets rail panel. Structurally identical to a third-party plugin (peer-deps on @pascal-app/*).",
   "repository": {
     "type": "git",
@@ -31,9 +31,9 @@
     "@dgreenheck/ez-tree": "^1.1.0"
   },
   "peerDependencies": {
-    "@pascal-app/core": ">=0.9.1 <1",
-    "@pascal-app/editor": ">=0.9.1 <1",
-    "@pascal-app/viewer": ">=0.9.1 <1",
+    "@pascal-app/core": ">=1.0.0-beta.4",
+    "@pascal-app/editor": ">=1.0.0-beta.4",
+    "@pascal-app/viewer": ">=1.0.0-beta.4",
     "@react-three/fiber": "^9",
     "react": "^18 || ^19",
     "three": "^0.185",
