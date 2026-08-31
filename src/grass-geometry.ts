@@ -1,4 +1,4 @@
-import { type BufferGeometry, ConeGeometry, DoubleSide, Group, Mesh } from 'three'
+import { BufferGeometry, DoubleSide, Float32BufferAttribute, Group, Mesh } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { GRASS_PRESETS } from './grass-presets'
 import type { GrassNode, GrassPreset } from './grass-schema'
@@ -40,9 +40,35 @@ function buildGrass(preset: GrassPreset, seed: number, bladeColor: string): Grou
   const blades: BufferGeometry[] = []
   for (let i = 0; i < spec.blades; i++) {
     const bh = h * (0.6 + rng() * 0.6)
-    const blade = new ConeGeometry(0.02, bh, 3)
-    blade.scale(1, 1, 0.3) // flatten the cone into a blade
-    blade.translate(0, bh / 2, 0)
+    const halfBaseWidth = 0.006
+    const halfTipWidth = 0.0006
+    const blade = new BufferGeometry()
+    blade.setAttribute(
+      'position',
+      new Float32BufferAttribute(
+        [
+          -halfBaseWidth,
+          0,
+          0,
+          halfBaseWidth,
+          0,
+          0,
+          halfTipWidth,
+          bh,
+          0,
+          -halfTipWidth,
+          bh,
+          0,
+        ],
+        3,
+      ),
+    )
+    blade.setAttribute(
+      'uv',
+      new Float32BufferAttribute([0, 0, 1, 0, 0.55, 1, 0.45, 1], 2),
+    )
+    blade.setIndex([0, 1, 2, 0, 2, 3])
+    blade.computeVertexNormals()
     blade.rotateZ((rng() - 0.5) * 0.7) // lean
     const angle = rng() * Math.PI * 2
     blade.rotateY(angle)
