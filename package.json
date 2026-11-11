@@ -17,6 +17,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./render": {
+      "types": "./src/render.ts",
+      "default": "./src/render.ts"
     }
   },
   "files": [
@@ -25,7 +29,8 @@
   ],
   "scripts": {
     "check-types": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "check:render": "bun scripts/check-render-entry.ts"
   },
   "dependencies": {
     "@dgreenheck/ez-tree": "^1.1.0"
