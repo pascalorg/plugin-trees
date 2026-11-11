@@ -6,6 +6,7 @@ import { NATURE_ICON } from './art'
 import { treeDefinition } from './definition'
 import { flowerDefinition } from './flower-definition'
 import { grassDefinition } from './grass-definition'
+import { treesRenderPlugin } from './render'
 
 type PluginHostPanel = {
   id: string
@@ -23,15 +24,15 @@ type PluginHostPanel = {
 }
 
 /**
- * The trees plugin manifest — the entire public surface of this package. A host
- * loads it through the same `loadPlugin` path the built-ins use: three node kinds
- * (`trees:tree`, `trees:flower`, `trees:grass`) and one left-rail panel
- * (`Trees`). Cast mirrors the built-in bundle: `AnyNodeDefinition` is the
- * hand-maintained union today; the registry derives it post-migration.
+ * The trees plugin manifest for editing hosts. A host loads it through the same
+ * `loadPlugin` path the built-ins use: three node kinds (`trees:tree`,
+ * `trees:flower`, `trees:grass`), each its render half (`./render`) composed
+ * with its edit half. The Nature panel is exported separately below. Cast
+ * mirrors the built-in bundle: `AnyNodeDefinition` is the hand-maintained union
+ * today; the registry derives it post-migration.
  */
 export const treesPlugin: Plugin = {
-  id: 'pascal:trees',
-  apiVersion: 1,
+  ...treesRenderPlugin,
   nodes: [
     treeDefinition as unknown as AnyNodeDefinition,
     flowerDefinition as unknown as AnyNodeDefinition,

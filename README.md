@@ -92,6 +92,24 @@ part of the v1 core plugin manifest. The panel declares `pluginId` and
 `defaultInstalled: true`, so Nature is listed in the Plugins sidebar and is
 enabled for new and legacy scenes unless a project explicitly uninstalls it.
 
+## Read-only viewers
+
+A viewer that only displays scenes can load the render-only entry instead. It
+registers the same plugin id, kinds, schemas, defaults and bake policy, with the
+renderers, systems, baked-scene renderers and 2D plan symbols, but no placement
+tools, inspector, gizmos or Nature panel, and nothing from `@pascal-app/editor`:
+
+```ts
+import { treesRenderPlugin } from '@pascal-app/plugin-trees/render'
+// viewer host:
+setPluginDiscovery(async () => [treesRenderPlugin])
+```
+
+Each kind's definition is split into a render half (`*definition.render.ts`)
+and an edit half (`*definition.edit.ts`); `treesPlugin` composes both, so
+editing hosts are unchanged. `bun run check:render` bundles `./render` and fails
+if anything in it reaches `@pascal-app/editor` or `next`.
+
 ## Notes / known gaps
 
 - `package.json` points `main`/`exports` at raw TypeScript (`./src/index.ts`).
